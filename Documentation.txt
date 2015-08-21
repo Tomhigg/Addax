@@ -1,0 +1,78 @@
+Remote Sensing of Land Surface Temperature.
+Tom Higginbottom
+Draft 1.0	 21st August 2015
+Addax- Land Surface Temperature Tool Documentation
+ Thermal Band
+The Thermal (brightness temperature) Band
+ Landsat 4,5,7 Use Band 6
+ Landsat 8 Use Bands 10 or 11 (See Note 1 ) 
+ Red
+The Red Reflectance Band
+ Landsat 4,5,7 Use Band 3
+ Landsat 8 Use Band 4
+ NIR
+The Near Infrared (NIR)Reflectance Band
+ Landsat 4,5,7 Use Band 4
+ Landsat 8 Use Band 5
+ Shapefile
+Output extent shapefile, slightly spurious results may occur on the edge pixels (up to 100m) of the scene edges due to a misalignment of the thermal and Red/NIR wavebands. 
+ LST_celcius
+Location of the output Land Surface Temperate raster, with .tif extension
+ Sensor Wavelength 
+Central Wavelength of the thermal band
+ Landsat 4,5,7 use 11.45
+ Landsat 8-Band 10 use 10.8
+ Landsat 8-Band 11 use 12
+Notes
+1-Landsat 8 has experienced residual thermal errors in Band 11, these ?thermal ghosts? make use of band 11 inadvisable. See http://landsat.usgs.gov/about_LU_Vol_8_Issue_2.php  and (Montanaro et al. 2014; Schott et al. 2014)
+2-Landsat 7 experience a failure of the Scan line corrector on 31st May 2003, imagery from this date onwards has a striped pattern covering roughly 20% the scene. 
+Model Development
+Land Surface Emissivity
+
+Land surface emissivity (LSE) is a measure of the ability of a surface to emit thermal energy.  As such, LSE is directly proportional to the resulting land surface temperature. The Landsat sensors operate only a single thermal band (with the exception of Landsat 8), therefore split window algorithms to estimate LSE are not possible , therefore LSE must be estimated using the optical wavelengths present. 
+Optical approaches to LSE estimation are based on two approaches; land cover classifications or vegetation thresholds. Estimations based on land-cover classification benefit from increased precision due to land-cover specific values (Sobrino and Raissouni 2000). However, generating accurate classifications can be a time-consuming process and should not be attempted where sufficient validation data is unavailable. Vegetation thresholds are a simplistic approach that relate the emissivity of a surface to the vegetation cover present. Vegetation is commonly estimated using the Normalised Difference Vegetation Index (NDVI). The NDVI estimates vegetation activity by normalising the ratio between the near infrared (strongly reflected by green vegetation) and red (strong absorption by green vegetation) wavebands (Tucker 1979).
+ The NDVI is calculated using the following equation:
+NDVI=(Band 4-Band 3)/(Band 4+Band 3)
+Equation 1 The Normalised Difference Vegetation Index
+Where Band 3 is reflectance in the red waveband and Band 4 is near infrared reflectance. 
+As a proxy of vegetation vigour and biomass, NDVI is strongly correlated with a natural logarithm of emissivity (Van de Griend and Owe 1993). However, LSE is more associated with the proportion of vegetation cover present within an area (Sobrino et al. 2004). NDVI can be used to estimate proportional vegetation cover using Equation 2.
+Pv=(NDVI-NDVImin)/(NDVIman-NDVImin)
+Equation 2 Conversion of NDVI to Proportional Vegetation Cover
+Where Pv is the vegetation proportion, as defined by Carlson and Ripley (1997). NDVImax is 0.5 and NDVImin is 0.2.
+Proportional vegetation cover can be converted to LSE by the following equations that account for the reflectance of soil and vegetation (from Sobrino et al. (2004)).
+em=m*Pv*n
+m=Ev-Es-(1-Es)  FEv
+n=Es+(1+Es)FEv
+Equation 3 a-c calculation of land surface emissivity from proportional vegetation cover
+Where, em is LSE, Pv is proportional vegetation, Ev and Es are emissivity values for vegetation and soil respectively, and F is a scale factor to account for differing geometric distributions given as 0.55.
+To estimate the emissivity of soil and vegetation, Sobrino et al. (2004) averaged soil and vegetation values obtained from the ASTER spectral library. For the Landsat thermal band, values of 0.97 and 0.99 for soil and vegetation respectively. Therefore, emissivity can be calculated by 
+em=(0.004*Pv)+0.986 
+Equation 4 Finalised Equation for calculation of Land Surface Emissivity
+Land Surface Temperature
+At sensor brightness (Tb), thermal reflectance, is combined with LSE to estimate LST using the following equation
+
+LST=Tb/Û(1+((?*Tb)/?)*log?(em) )
+Where; Tb is At-sensor-Brightness temperature for Landsat Band 6, ? is the centre wavelength (æm) for Landsat Band 6 (11.45) and ? = h x c/å =1.438 x 10-2 mK (å=Boltzmann constant=1.38 x 10-23 J/K, h=Planck?s constant=6.626 x 10-34 Js, c=velocity of light=2.998 x 108 m/s) or (14380)
+
+Comparison with MODIS LST Products 
+The Landsat-derived LST image was resample into 1km pixels to match the MODIS resolution. A linear regression between the two images (MODIS~Landsat) resulted in a strong significant relationship (R2=.84, P<0.0001) for both Aqua and Terra products. The Landsat estimates are consistently lower than both MODIS products, some of this difference can be attributed to the over pastime of the satellite; 11.03 (Landsat), 10.30 (Terra), 13:30 (Aqua). Remaining variance can be attributed to emissivity estimations, and scale variations. 
+
+
+Comparison of MODIS and Landsat-derived Land Surface Temperature Estimates, black line is a 1:1 line, coloured lines are linear regressions for the relevant satellites. 
+
+
+
+
+
+
+
+
+Carlson, T.N., & Ripley, D.A. (1997). On the relation between NDVI, fractional vegetation cover, and leaf area index. Remote sensing of Environment, 62, 241-252
+Montanaro, M., Gerace, A., Lunsford, A., & Reuter, D. (2014). Stray light artifacts in imagery from the Landsat 8 Thermal Infrared Sensor. Remote Sensing, 6, 10435-10456
+Schott, J.R., Gerace, A., Raqueno, N., Ientilucci, E., Raqueno, R., & Lunsford, A.W. (2014). Chasing the TIRS ghosts: Calibrating the Landsat 8 thermal bands. In, SPIE Optical Engineering+ Applications (pp. 92181A-92181A-92120): International Society for Optics and Photonics
+Sobrino, J., & Raissouni, N. (2000). Toward remote sensing methods for land cover dynamic monitoring: application to Morocco. International Journal of Remote Sensing, 21, 353-366
+Sobrino, J.A., Jim‚nez-Mu¤oz, J.C., & Paolini, L. (2004). Land surface temperature retrieval from LANDSAT TM 5. Remote sensing of Environment, 90, 434-440
+Tucker, C.J. (1979). Red and photographic infrared linear combinations for monitoring vegetation. Remote sensing of Environment, 8, 127-150
+Van de Griend, A., & Owe, M. (1993). On the relationship between thermal emissivity and the normalized difference vegetation index for natural surfaces. International Journal of Remote Sensing, 14, 1119-1131
+
+
